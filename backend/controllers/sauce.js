@@ -33,11 +33,17 @@ exports.getOneSauce = (req, res, next) => {
     .catch(error => { res.status(400).json( {error} )});
 };
 
-
 // Fonction de suppression d'une sauce
 exports.deleteSauce = (req, res, next) => {
     SauceModel.findOne({ _id: req.params.id})
     .then(sauce => {
+      if (sauce.userId !== req.auth.userId) {
+        res.status(403).json({
+        error: new Error(
+            "Vous n'êtes pas le propriétaire de cette sauce."
+        ),
+        });
+      }
         const filename = sauce.imageUrl.split('/images/')[1];
         fs.unlink(`images/${filename}`, () => {});
         SauceModel.deleteOne({ _id: req.params.id})

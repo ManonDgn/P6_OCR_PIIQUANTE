@@ -3,12 +3,12 @@ const UserModel = require('../models/User');
 const jwt = require('jsonwebtoken');
 
 // Fonction d'inscription -- 
-exports.signup = (req, res, next) => {
+exports.signup = (req, res) => {
     bcrypt.hash(req.body.password, 10)
       .then(hash => {
         const user = new UserModel({
           email: req.body.email,
-          password: hash
+          password: hash,
         });
         user.save()
           .then(() => res.status(201).json({ message: 'Utilisateur créé !' }))
@@ -35,11 +35,9 @@ exports.login = (req, res, next) => {
                         token: jwt.sign(
                             { userId: user._id },
                             'Z6uG?61Gk:%z@iJ69YCrI;-h"~u)XThX',
-                            { expiresIn: '24h' }
-                        )
+                            { expiresIn: '24h' })
                     });
                 })
-                .catch(error => res.status(500).json({ error }));
-        })
         .catch(error => res.status(500).json({ error }));
+    });
 };

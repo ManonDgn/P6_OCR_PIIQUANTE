@@ -9,17 +9,27 @@ app.use(express.json());
 
 // XSS 
 const xss = require('xss-clean');
+
+// Headers
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    next();
+});
 // Helmet 
 const helmet = require('helmet');
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "same-site"}
 }));
+
 // Mongo Sanitize
 app.use(
     mongoSanitize({
       replaceWith: '_',
     }),
-  );
+);
+
 // Express-Rate-Limit
 const rateLimit = require('express-rate-limit');
 const limiter = rateLimit({
@@ -27,7 +37,7 @@ const limiter = rateLimit({
 	max: 10, // Limit each IP to 10 requests per `window` (here, per 15 minutes)
 	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
 	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-})
+});
 
 // Apply the rate limiting middleware to all requests
 app.use(limiter)
@@ -40,14 +50,6 @@ mongoose.connect('mongodb+srv://MiaDgn:AZERTY@cluster0.3ddovs0.mongodb.net/?retr
 .catch(() => console.log('Connexion à MongoDB échouée !'));
 
 
-
-// Headers
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    next();
-});
 // XSS
 app.use(xss())
 // Routes User --

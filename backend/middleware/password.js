@@ -17,6 +17,6 @@ module.exports = (req, res, next) => {
     if (passwordSchema.validate(req.body.password)) {
         next();
     } else {
-        return res.status(400).json({error : `password not matching ${passwordSchema.validate('req.body.password', {list: true})}`})
+        return res.status(400).json({error : `Format du mot de passe non valide ${passwordSchema.validate('req.body.password', {list: true})}`})
     }
 };

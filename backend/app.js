@@ -1,36 +1,22 @@
-// Express -- 
+// Express
 const express = require('express');
-// Mongoose - MongoDB --
+// Mongoose - MongoDB
 const mongoose = require('mongoose');
-const mongoSanitize = require('express-mongo-sanitize');
-// App et analyse de la requête -- 
+// App et analyse de la requête 
 const app = express();
 app.use(express.json());
 
-// XSS 
+// ------- SECURITÉ
+// FICHIER .ENV
+require('dotenv').config();
+// EXPRESS-MONGO-SANITIZE (remplace certains caractères spéciaux dans les inputs comme le $ ou le .)
+const mongoSanitize = require('express-mongo-sanitize');
+// XSS (Empêche les injections de script dans les inputs)
 const xss = require('xss-clean');
-
-// Headers
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    next();
-});
-// Helmet 
+// HELMET
 const helmet = require('helmet');
-app.use(helmet({
-    crossOriginResourcePolicy: { policy: "same-site"}
-}));
-
-// Mongo Sanitize
-app.use(
-    mongoSanitize({
-      replaceWith: '_',
-    }),
-);
-
-// Express-Rate-Limit
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+// Express-Rate-Limit (limite, par fenêtre de navigateur, le nombre de requêtes dans un temps donné. Ici 10 pour 15mn)
 const rateLimit = require('express-rate-limit');
 const limiter = rateLimit({
 	windowMs: 15 * 60 * 1000, // 15 minutes
@@ -39,19 +25,29 @@ const limiter = rateLimit({
 	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 
-// Apply the rate limiting middleware to all requests
-app.use(limiter)
-
-
-// Connexion Base de données
+// Headers
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    next();
+});
+// EXPRESS-MONGO-SANITIZE <-> App (caractères "$" et "." dans les inputs seront remplacés par un underscore "_")
+app.use(
+    mongoSanitize({
+      replaceWith: '_',
+    }),
+);
+// MongoDB <-> App
 mongoose.connect('mongodb+srv://MiaDgn:AZERTY@cluster0.3ddovs0.mongodb.net/?retryWrites=true&w=majority',
     { useNewUrlParser: true, useUnifiedTopology: true })
 .then(() => console.log('Connexion à MongoDB réussie !'))
 .catch(() => console.log('Connexion à MongoDB échouée !'));
-
-
-// XSS
+// Express-Rate-Limit <-> App (Appliqué sur les routes User)
+app.use('./routes/user', limiter);
+// XSS <-> App (Appliqué partout)
 app.use(xss())
+
 // Routes User --
 const userRoutes = require('./routes/user');
 app.use('/api/auth', userRoutes);

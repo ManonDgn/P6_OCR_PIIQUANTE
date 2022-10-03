@@ -16,39 +16,32 @@ exports.createSauce = (req, res, next) => {
     });
     sauce.save()
     .then(() => {res.status(201).json({ message: 'Sauce ajoutée'})})
-    .catch(error => { res.status(400).json( {error} )})
+    .catch(error => { res.status(400).json( {error : 'Sauce non ajoutée' } )})
 };
 
 // Fonction d'affichage  de toutes les sauces
 exports.getAllSauces = (req, res, next) => {
     SauceModel.find()
     .then((sauces) => { res.status(200).json(sauces)})
-    .catch(error => { res.status(400).json( {error} )});
+    .catch(error => { res.status(400).json( {error : 'Sauces introuvables'} )});
 };
 
 // Fonction d'affichage d'une sauce
 exports.getOneSauce = (req, res, next) => {   
     SauceModel.findOne({ _id: req.params.id})
     .then((sauce) => { res.status(200).json(sauce)})
-    .catch(error => { res.status(400).json( {error} )});
+    .catch(error => { res.status(400).json( {error : 'Sauce introuvable'} )});
 };
 
 // Fonction de suppression d'une sauce
 exports.deleteSauce = (req, res, next) => {
     SauceModel.findOne({ _id: req.params.id})
     .then(sauce => {
-      if (sauce.userId !== req.auth.userId) {
-        res.status(403).json({
-        error: new Error(
-            "Vous n'êtes pas le propriétaire de cette sauce."
-        ),
-        });
-      }
-        const filename = sauce.imageUrl.split('/images/')[1];
-        fs.unlink(`images/${filename}`, () => {});
-        SauceModel.deleteOne({ _id: req.params.id})
-            .then(() => {res.status(200).json({message: 'Objet supprimé !'})})
-            .catch(error => res.status(401).json({ error }));
+      const filename = sauce.imageUrl.split('/images/')[1];
+      fs.unlink(`images/${filename}`, () => {});
+      SauceModel.deleteOne({ _id: req.params.id})
+        .then(() => {res.status(200).json({message: 'Sauce supprimée !'})})
+        .catch(error => res.status(400).json({ error }));
     })
     .catch(error => {
         res.status(500).json({error});
@@ -57,15 +50,15 @@ exports.deleteSauce = (req, res, next) => {
 
 // Fonction de modification d'une sauce
 exports.modifySauce = (req, res, next) => {
-    const sauceObject = req.file ? {
-        ...JSON.parse(req.body.sauce),
-        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
-    } : { ...req.body };
     SauceModel.findOne({ _id: req.params.id})
         .then((sauce) => {
-            SauceModel.updateOne({ _id: req.params.id}, { ...sauceObject, _id: req.params.id})
-            .then(() => res.status(200).json({message : 'Objet modifié!'}))
-            .catch(error => res.status(401).json({ error }));
+          const sauceObject = req.file ? {
+            ...JSON.parse(req.body.sauce),
+            imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+        } : { ...req.body };
+          SauceModel.updateOne({ _id: req.params.id}, { ...sauceObject, _id: req.params.id})
+          .then(() => res.status(200).json({message : 'Sauce modifiée !'}))
+          .catch(error => res.status(401).json({ error : 'Sauce non modifiée !'}));
         })
         .catch(error => { res.status(400).json( {error} )});
 };
@@ -76,10 +69,8 @@ exports.likeOrDislikeSauce = (req, res, next) => {
     .then((sauce) => {
         if (!sauce) {
         return res.status(404).json({
-            error: new Error("Cette sauce n'existe pas"),
-        });
-        };
-        
+            error: "Cette sauce n'existe pas"})
+        }
         const userLikeIndex = sauce.usersLiked.findIndex(
         (userId) => userId == req.body.userId
         );
@@ -89,7 +80,7 @@ exports.likeOrDislikeSauce = (req, res, next) => {
         if (req.body.like === 1) {
           if (userLikeIndex !== -1) {
               return res.status(500).json({
-              error: new Error("L'utilisateur a déjà liké cette sauce"),
+              error: "L'utilisateur a déjà liké cette sauce"
               });
         }
           if (userDislikeIndex !== -1) {
@@ -102,7 +93,7 @@ exports.likeOrDislikeSauce = (req, res, next) => {
     if (req.body.like === -1) {
       if (userDislikeIndex !== -1) {
         return res.status(500).json({
-          error: new Error("L'utilisateur a déjà disliké cette sauce"),
+          error: "L'utilisateur a déjà disliké cette sauce",
         });
       }
       if (userLikeIndex !== -1) {
@@ -123,13 +114,12 @@ exports.likeOrDislikeSauce = (req, res, next) => {
       }
     }
     SauceModel.updateOne({ _id: req.params.id }, sauce).then(() => {
-      res.status(200).json({ message: "Avis enregistré !" });
+      res.status(200).json({ message: "Vote enregistré !" });
     });
     });
 };
 /*
 Si l'utilisateur n'a pas voté 
-if (sauce.usersLiked.indexOf(req.body.userId)
     S'il veut liker
 
     Alors
@@ -138,4 +128,11 @@ if (sauce.usersLiked.indexOf(req.body.userId)
 
 Sinon, l'utilisateur a déjà voté
 ALORS
+
+
+
+if (SauceModel.userId !== req.auth.userId) {
+  res.status(403).json({error:"Vous n'êtes pas le propriétaire de cette sauce."})
+};
 */
+

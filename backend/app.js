@@ -18,12 +18,6 @@ const helmet = require('helmet');
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 // Express-Rate-Limit (limite, par fenêtre de navigateur, le nombre de requêtes dans un temps donné. Ici 10 pour 15mn)
 const rateLimit = require('express-rate-limit');
-const limiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 minutes
-	max: 10, // Limit each IP to 10 requests per `window` (here, per 15 minutes)
-	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-});
 
 // Headers
 app.use((req, res, next) => {
@@ -39,11 +33,17 @@ app.use(
     }),
 );
 // MongoDB <-> App
-mongoose.connect('mongodb+srv://MiaDgn:AZERTY@cluster0.3ddovs0.mongodb.net/?retryWrites=true&w=majority',
+mongoose.connect('mongodb+srv://'+ process.env.ID_PASSWORD_MONGO +'@cluster0.3ddovs0.mongodb.net/?retryWrites=true&w=majority',
     { useNewUrlParser: true, useUnifiedTopology: true })
 .then(() => console.log('Connexion à MongoDB réussie !'))
 .catch(() => console.log('Connexion à MongoDB échouée !'));
 // Express-Rate-Limit <-> App (Appliqué sur les routes User)
+const limiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	max: 10, // Limit each IP to 10 requests per `window` (here, per 15 minutes)
+	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
 app.use('./routes/user', limiter);
 // XSS <-> App (Appliqué partout)
 app.use(xss())

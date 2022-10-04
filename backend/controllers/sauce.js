@@ -118,21 +118,4 @@ exports.likeOrDislikeSauce = (req, res, next) => {
     });
     });
 };
-/*
-Si l'utilisateur n'a pas voté 
-    S'il veut liker
-
-    Alors
-    S'il veut disliker
-    Alors
-
-Sinon, l'utilisateur a déjà voté
-ALORS
-
-
-
-if (SauceModel.userId !== req.auth.userId) {
-  res.status(403).json({error:"Vous n'êtes pas le propriétaire de cette sauce."})
-};
-*/
 

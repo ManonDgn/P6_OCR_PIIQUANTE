@@ -6,7 +6,7 @@ const auth = require('../middleware/auth');
 // Appel de la fonctionnalité de gérer-stocker les images
 const multer = require('../middleware/multer-config');
 
-// Appel des actions sur les sauces
+// Appel des fonctions prévues sur les sauces et de son modèle-type
 const sauceCtrl = require('../controllers/sauce');
 const sauce = require('../models/sauce');
 

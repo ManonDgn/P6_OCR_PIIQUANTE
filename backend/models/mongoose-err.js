@@ -1,4 +1,6 @@
 const MongooseErrors = require('mongoose-errors')
+
+// Modèle-type des remontées d'erreurs
 const ModelSchema = new Schema({
     requiredField: {
         type: String,
